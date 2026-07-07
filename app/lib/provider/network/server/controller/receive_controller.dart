@@ -17,6 +17,7 @@ import 'package:common/model/session_status.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:localsend_app/gen/assets.gen.dart';
 import 'package:localsend_app/model/state/send/send_session_state.dart';
 import 'package:localsend_app/model/state/server/receive_session_state.dart';
 import 'package:localsend_app/model/state/server/receiving_file.dart';
@@ -42,6 +43,7 @@ import 'package:localsend_app/util/native/directories.dart';
 import 'package:localsend_app/util/native/file_saver.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/util/native/tray_helper.dart';
+import 'package:localsend_app/util/qr_upload_url.dart';
 import 'package:localsend_app/util/rust.dart';
 import 'package:localsend_app/util/simple_server.dart';
 import 'package:localsend_app/widget/dialogs/open_file_dialog.dart';
@@ -71,6 +73,14 @@ class ReceiveController {
     required String fingerprint,
     required String showToken,
   }) {
+    router.get(qrUploadPath, (HttpRequest request) async {
+      return await request.respondAsset(200, Assets.web.uploadHtml);
+    });
+
+    router.get(qrUploadScriptPath, (HttpRequest request) async {
+      return await request.respondAsset(200, Assets.web.uploadJs, 'text/javascript; charset=utf-8');
+    });
+
     router.get(ApiRoute.info.v1, (HttpRequest request) async {
       return await _infoHandler(request: request, alias: alias, fingerprint: fingerprint);
     });

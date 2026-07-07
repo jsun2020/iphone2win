@@ -28,6 +28,15 @@ void main() {
       expect(js, contains('fetch('));
       expect(js, contains('pin'));
     });
+
+    test('ReceiveController serves the local upload page assets', () {
+      final source = _readAsset('lib/provider/network/server/controller/receive_controller.dart');
+
+      expect(source, contains('qrUploadPath'));
+      expect(source, contains('qrUploadScriptPath'));
+      expect(source, contains('Assets.web.uploadHtml'));
+      expect(source, contains('Assets.web.uploadJs'));
+    });
   });
 }
 
