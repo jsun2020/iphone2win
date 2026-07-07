@@ -54,8 +54,14 @@ class $AssetsWebGen {
   /// File path: assets/web/main.js
   String get main => 'assets/web/main.js';
 
+  /// File path: assets/web/upload.html
+  String get uploadHtml => 'assets/web/upload.html';
+
+  /// File path: assets/web/upload.js
+  String get uploadJs => 'assets/web/upload.js';
+
   /// List of all assets
-  List<String> get values => [error403, index, main];
+  List<String> get values => [error403, index, main, uploadHtml, uploadJs];
 }
 
 class Assets {
