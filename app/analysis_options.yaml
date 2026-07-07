@@ -13,8 +13,10 @@ analyzer:
   plugins:
     - custom_lint
   exclude:
+    - build/**
     - lib/**.g.dart
     - lib/**.freezed.dart
+    - rust_builder/cargokit/build_tool/**
     - submodules/**
 
 formatter:
