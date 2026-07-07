@@ -14,7 +14,9 @@ Commands run:
 - `flutter analyze`
   - Result: passed with `No issues found!`.
 - `flutter test`
-  - Result: passed, 57 tests.
+  - Result: passed, 67 tests.
+- `flutter test test/unit/ui/receive_tab_qr_upload_test.dart test/unit/util/qr_upload_url_test.dart test/unit/web/qr_upload_assets_test.dart`
+  - Result: passed, 10 focused QR upload tests.
 - `cargo test --manifest-path .\app\rust\Cargo.toml`
   - Result: passed, 0 Rust tests. Existing upstream/FRB warnings remain.
 - `flutter build windows --debug`
@@ -28,6 +30,9 @@ Expected privacy outcome:
 - No `in_app_purchase` dependency remains.
 - No generated StoreKit purchase plugin remains.
 - No known analytics, crash reporting, ads, or telemetry SDK reference remains in active audited app paths.
+- QR upload URL generation uses only the first local IP address, the current local port, and `/upload`.
+- The QR code does not include alias, version, device model, device type, token, fingerprint, or public IP address.
+- The bundled QR upload page and script contain no remote `http://` or `https://` references and call only same-origin LocalSend v2 upload endpoints.
 
 Windows build note:
 
