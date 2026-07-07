@@ -28,8 +28,6 @@ async fn main() -> Result<()> {
         .with_max_level(Level::DEBUG)
         .init();
 
-    webrtc_test().await?;
-
     let a = tokio::spawn(async move {
         let _ = server_test().await;
     });
@@ -232,14 +230,14 @@ async fn webrtc_test() -> Result<()> {
         token: "test".to_string(),
     };
     let connection =
-        webrtc::signaling::SignalingConnection::connect("wss://public.localsend.org/v1/ws", &info)
+        webrtc::signaling::SignalingConnection::connect("ws://127.0.0.1:53318/v1/ws", &info)
             .await?;
 
     let (managed_connection, mut rx) = connection.start_listener();
     let managed_connection = Arc::new(managed_connection);
 
     while let Some(message) = rx.recv().await {
-        let stun_servers = vec!["stun:stun.l.google.com:19302".to_string()];
+        let stun_servers = vec!["stun:127.0.0.1:3478".to_string()];
         match message {
             WsServerMessage::Join { peer } => {
                 send_handler(managed_connection.clone(), stun_servers, peer).await;
