@@ -4,6 +4,7 @@ import 'package:localsend_app/model/state/server/server_state.dart';
 import 'package:localsend_app/provider/local_ip_provider.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
+import 'package:localsend_app/util/qr_upload_url.dart';
 import 'package:localsend_app/widget/dialogs/quick_save_from_favorites_notice.dart';
 import 'package:localsend_app/widget/dialogs/quick_save_notice.dart';
 import 'package:refena_flutter/refena_flutter.dart';
@@ -21,8 +22,10 @@ class ReceiveTabVm {
   final bool quickSaveFromFavoritesSettings;
   final ServerState? serverState;
   final List<String> localIps;
+  final String? qrUploadUrl;
   final bool showAdvanced;
   final bool showHistoryButton;
+  final Future<String?> Function() prepareQrUpload;
   final Future<void> Function() toggleAdvanced;
   final Future<void> Function(BuildContext context, bool enable) onSetQuickSave;
   final Future<void> Function(BuildContext context, bool enable) onSetQuickSaveFromFavorites;
@@ -33,8 +36,10 @@ class ReceiveTabVm {
     required this.quickSaveFromFavoritesSettings,
     required this.serverState,
     required this.localIps,
+    required this.qrUploadUrl,
     required this.showAdvanced,
     required this.showHistoryButton,
+    required this.prepareQrUpload,
     required this.toggleAdvanced,
     required this.onSetQuickSave,
     required this.onSetQuickSaveFromFavorites,
@@ -47,6 +52,7 @@ final receiveTabVmProvider = ViewProvider((ref) {
   final serverState = ref.watch(serverProvider);
   final showAdvanced = ref.watch(_showAdvancedProvider);
   final showHistoryButton = ref.watch(_showHistoryButtonProvider);
+  final qrUploadUrl = buildQrUploadUrl(serverState: serverState, localIps: networkInfo);
 
   return ReceiveTabVm(
     aliasSettings: alias,
@@ -54,8 +60,32 @@ final receiveTabVmProvider = ViewProvider((ref) {
     quickSaveFromFavoritesSettings: quickSaveFromFavorites,
     serverState: serverState,
     localIps: networkInfo,
+    qrUploadUrl: qrUploadUrl,
     showAdvanced: showAdvanced,
     showHistoryButton: showHistoryButton,
+    prepareQrUpload: () async {
+      final currentServerState = ref.read(serverProvider);
+      final localIps = ref.read(localIpProvider).localIps;
+      if (currentServerState == null || localIps.isEmpty) {
+        return null;
+      }
+
+      ServerState? qrServerState = currentServerState;
+      if (currentServerState.https) {
+        qrServerState = await ref
+            .notifier(serverProvider)
+            .restartServer(
+              alias: currentServerState.alias,
+              port: currentServerState.port,
+              https: false,
+            );
+      }
+
+      return buildQrUploadUrl(
+        serverState: qrServerState ?? ref.read(serverProvider),
+        localIps: localIps,
+      );
+    },
     toggleAdvanced: () async {
       if (showAdvanced) {
         ref.notifier(_showAdvancedProvider).setState((_) => false);

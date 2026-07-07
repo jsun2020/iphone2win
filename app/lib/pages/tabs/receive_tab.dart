@@ -11,6 +11,7 @@ import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/widget/animations/initial_fade_transition.dart';
 import 'package:localsend_app/widget/column_list_view.dart';
 import 'package:localsend_app/widget/custom_icon_button.dart';
+import 'package:localsend_app/widget/dialogs/qr_dialog.dart';
 import 'package:localsend_app/widget/local_send_logo.dart';
 import 'package:localsend_app/widget/responsive_list_view.dart';
 import 'package:localsend_app/widget/rotating_widget.dart';
@@ -141,6 +142,8 @@ class ReceiveTab extends StatelessWidget {
         _CornerButtons(
           showAdvanced: vm.showAdvanced,
           showHistoryButton: vm.showHistoryButton,
+          qrUploadUrl: vm.qrUploadUrl,
+          prepareQrUpload: vm.prepareQrUpload,
           toggleAdvanced: vm.toggleAdvanced,
         ),
       ],
@@ -151,11 +154,15 @@ class ReceiveTab extends StatelessWidget {
 class _CornerButtons extends StatelessWidget {
   final bool showAdvanced;
   final bool showHistoryButton;
+  final String? qrUploadUrl;
+  final Future<String?> Function() prepareQrUpload;
   final Future<void> Function() toggleAdvanced;
 
   const _CornerButtons({
     required this.showAdvanced,
     required this.showHistoryButton,
+    required this.qrUploadUrl,
+    required this.prepareQrUpload,
     required this.toggleAdvanced,
   });
 
@@ -178,6 +185,22 @@ class _CornerButtons extends StatelessWidget {
                   },
                   child: const Icon(Icons.history),
                 ),
+              ),
+            if (!showAdvanced)
+              CustomIconButton(
+                key: const ValueKey('qr-upload-btn'),
+                onPressed: qrUploadUrl == null
+                    ? null
+                    : () async {
+                        final url = await prepareQrUpload();
+                        if (context.mounted && url != null) {
+                          await showDialog(
+                            context: context,
+                            builder: (context) => QrDialog(data: url, label: url),
+                          );
+                        }
+                      },
+                child: const Icon(Icons.qr_code),
               ),
             CustomIconButton(
               key: const ValueKey('info-btn'),
