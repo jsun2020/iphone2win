@@ -32,6 +32,7 @@ class SendTabVm {
   final List<FavoriteDevice> favoriteDevices;
   final Future<void> Function(BuildContext context) onTapAddress;
   final Future<void> Function(BuildContext context) onTapFavorite;
+  final Future<void> Function(BuildContext context) onTapShareViaLink;
   final Future<void> Function(BuildContext context, SendMode mode) onTapSendMode;
   final Future<void> Function(BuildContext context, Device device) onToggleFavorite;
   final Future<void> Function(BuildContext context, Device device) onTapDevice;
@@ -45,6 +46,7 @@ class SendTabVm {
     required this.favoriteDevices,
     required this.onTapAddress,
     required this.onTapFavorite,
+    required this.onTapShareViaLink,
     required this.onTapSendMode,
     required this.onToggleFavorite,
     required this.onTapDevice,
@@ -58,6 +60,14 @@ final sendTabVmProvider = ViewProvider((ref) {
   final localIps = ref.watch(localIpProvider).localIps;
   final nearbyDevices = ref.watch(nearbyDevicesProvider).allDevices.values;
   final favoriteDevices = ref.watch(favoritesProvider);
+  Future<void> shareViaLink(BuildContext context) async {
+    final files = ref.read(selectedSendingFilesProvider);
+    if (files.isEmpty) {
+      await context.pushBottomSheet(() => const NoFilesDialog());
+      return;
+    }
+    await context.push(() => WebSendPage(files));
+  }
 
   return SendTabVm(
     sendMode: sendMode,
@@ -106,14 +116,10 @@ final sendTabVmProvider = ViewProvider((ref) {
             );
       }
     },
+    onTapShareViaLink: shareViaLink,
     onTapSendMode: (context, mode) async {
       if (mode == SendMode.link) {
-        final files = ref.read(selectedSendingFilesProvider);
-        if (files.isEmpty) {
-          await context.pushBottomSheet(() => const NoFilesDialog());
-          return;
-        }
-        await context.push(() => WebSendPage(files));
+        await shareViaLink(context);
         return;
       }
 

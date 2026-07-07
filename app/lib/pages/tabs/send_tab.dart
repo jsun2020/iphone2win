@@ -124,8 +124,11 @@ class SendTab extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 15,
+                            runSpacing: 8,
                             children: [
                               TextButton(
                                 style: TextButton.styleFrom(
@@ -136,7 +139,15 @@ class SendTab extends StatelessWidget {
                                 },
                                 child: Text(t.general.edit),
                               ),
-                              const SizedBox(width: 15),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                                onPressed: () async => await vm.onTapShareViaLink(context),
+                                icon: const Icon(Icons.qr_code),
+                                label: Text(t.sendTab.sendModes.link),
+                              ),
                               ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Theme.of(context).colorScheme.primary,
