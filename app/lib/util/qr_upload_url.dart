@@ -2,6 +2,7 @@ import 'package:localsend_app/model/state/server/server_state.dart';
 
 const qrUploadPath = '/upload';
 const qrUploadScriptPath = '/upload.js';
+const qrClipboardTextPath = '/api/iphone2win/v1/clipboard-text';
 
 String? buildQrUploadUrl({
   required ServerState? serverState,

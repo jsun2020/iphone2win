@@ -41,19 +41,30 @@
     }
 
     input,
+    textarea,
     button {
       box-sizing: border-box;
       width: 100%;
-      min-height: 46px;
       font: inherit;
       border-radius: 8px;
     }
 
-    input {
+    input,
+    textarea {
       border: 1px solid ButtonBorder;
       padding: 10px;
       background: Field;
       color: FieldText;
+    }
+
+    input,
+    button {
+      min-height: 46px;
+    }
+
+    textarea {
+      min-height: 132px;
+      resize: vertical;
     }
 
     button {
@@ -64,8 +75,21 @@
       font-weight: 700;
     }
 
+    button.secondary {
+      margin-top: 10px;
+      border: 1px solid ButtonBorder;
+      background: ButtonFace;
+      color: ButtonText;
+    }
+
     button:disabled {
       opacity: .55;
+    }
+
+    .section {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid ButtonBorder;
     }
 
     #status {
@@ -84,15 +108,23 @@
 <body>
   <main>
     <h1>iphone2win</h1>
-    <p>Select files on this device and send them directly to the Windows receiver on your local network.</p>
+    <p>Send files or text directly to the Windows receiver on your local network.</p>
 
-    <label for="files">Files</label>
-    <input id="files" type="file" multiple>
+    <label for="clipboardText">Text</label>
+    <textarea id="clipboardText" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Paste or type text to copy into Windows clipboard"></textarea>
+    <button id="pasteText" class="secondary" type="button">Paste from clipboard</button>
 
     <label for="pin">PIN</label>
     <input id="pin" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="Optional receive PIN">
 
+    <button id="sendText" type="button">Send text to Windows clipboard</button>
+
+    <div class="section">
+    <label for="files">Files</label>
+    <input id="files" type="file" multiple>
+
     <button id="send" type="button">Send files</button>
+    </div>
     <ul id="status" aria-live="polite"></ul>
   </main>
   <script src="/upload.js"></script>

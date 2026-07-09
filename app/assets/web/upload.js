@@ -1,7 +1,10 @@
 (function () {
   var filesInput = document.getElementById('files');
+  var clipboardTextInput = document.getElementById('clipboardText');
   var pinInput = document.getElementById('pin');
   var sendButton = document.getElementById('send');
+  var pasteTextButton = document.getElementById('pasteText');
+  var sendTextButton = document.getElementById('sendText');
   var statusList = document.getElementById('status');
 
   function addStatus(text) {
@@ -12,8 +15,11 @@
 
   function setBusy(busy) {
     filesInput.disabled = busy;
+    clipboardTextInput.disabled = busy;
     pinInput.disabled = busy;
     sendButton.disabled = busy;
+    pasteTextButton.disabled = busy;
+    sendTextButton.disabled = busy;
   }
 
   function fileId(index) {
@@ -107,6 +113,76 @@
       throw new Error('Upload failed: ' + response.status);
     }
   }
+
+  async function sendClipboardText(text, pin) {
+    var url = '/api/iphone2win/v1/clipboard-text';
+    if (pin) {
+      url += '?pin=' + encodeURIComponent(pin);
+    }
+
+    var response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: text
+      })
+    });
+
+    if (response.status === 400) {
+      throw new Error('Text is empty or invalid.');
+    }
+    if (response.status === 401) {
+      throw new Error('PIN required or invalid.');
+    }
+    if (response.status === 413) {
+      throw new Error('Text is too large.');
+    }
+    if (response.status === 429) {
+      throw new Error('Too many PIN attempts.');
+    }
+    if (!response.ok) {
+      throw new Error('Text transfer failed: ' + response.status);
+    }
+  }
+
+  pasteTextButton.addEventListener('click', async function () {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      addStatus('Clipboard paste is not available in this browser. Long-press the text box and paste manually.');
+      clipboardTextInput.focus();
+      return;
+    }
+
+    try {
+      clipboardTextInput.value = await navigator.clipboard.readText();
+      addStatus('Text pasted into the box.');
+    } catch (error) {
+      addStatus('Clipboard paste was blocked. Long-press the text box and paste manually.');
+      clipboardTextInput.focus();
+    }
+  });
+
+  sendTextButton.addEventListener('click', async function () {
+    statusList.innerHTML = '';
+    var text = clipboardTextInput.value;
+    var pin = pinInput.value.trim();
+
+    if (!text) {
+      addStatus('Paste or type text first.');
+      return;
+    }
+
+    setBusy(true);
+    try {
+      await sendClipboardText(text, pin);
+      addStatus('Text copied to the Windows clipboard.');
+    } catch (error) {
+      addStatus(error && error.message ? error.message : String(error));
+    } finally {
+      setBusy(false);
+    }
+  });
 
   sendButton.addEventListener('click', async function () {
     statusList.innerHTML = '';

@@ -14,9 +14,7 @@ import 'package:common/model/dto/register_dto.dart';
 import 'package:common/model/file_status.dart';
 import 'package:common/model/file_type.dart';
 import 'package:common/model/session_status.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:localsend_app/gen/assets.gen.dart';
 import 'package:localsend_app/model/state/send/send_session_state.dart';
 import 'package:localsend_app/model/state/server/receive_session_state.dart';
@@ -55,6 +53,7 @@ import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
 
 const _uuid = Uuid();
+const _maxClipboardTextBytes = 256 * 1024;
 
 final _logger = Logger('ReceiveController');
 
@@ -79,6 +78,10 @@ class ReceiveController {
 
     router.get(qrUploadScriptPath, (HttpRequest request) async {
       return await request.respondAsset(200, Assets.web.uploadJs, 'text/javascript; charset=utf-8');
+    });
+
+    router.post(qrClipboardTextPath, (HttpRequest request) async {
+      return await _clipboardTextHandler(request: request);
     });
 
     router.get(ApiRoute.info.v1, (HttpRequest request) async {
@@ -194,6 +197,54 @@ class ReceiveController {
     );
 
     return await request.respondJson(200, body: responseDto.toJson());
+  }
+
+  Future<void> _clipboardTextHandler({
+    required HttpRequest request,
+  }) async {
+    if (server.getState().session != null) {
+      return await request.respondJson(409, message: 'Blocked by another session');
+    }
+
+    final pinCorrect = await checkPin(
+      server: server,
+      pin: server.ref.read(settingsProvider).receivePin,
+      pinAttempts: server.getState().pinAttempts,
+      request: request,
+    );
+    if (!pinCorrect) {
+      return;
+    }
+
+    final Object? decoded;
+    try {
+      final payload = await request.readAsString();
+      decoded = jsonDecode(payload);
+    } catch (_) {
+      return await request.respondJson(400, message: 'Request body malformed');
+    }
+
+    if (decoded is! Map) {
+      return await request.respondJson(400, message: 'Request body malformed');
+    }
+
+    final text = decoded['text'];
+    if (text is! String || text.isEmpty) {
+      return await request.respondJson(400, message: 'Text is required');
+    }
+
+    if (utf8.encode(text).length > _maxClipboardTextBytes) {
+      return await request.respondJson(413, message: 'Text is too large');
+    }
+
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+    } catch (e, st) {
+      _logger.warning('Failed to write browser text to clipboard', e, st);
+      return await request.respondJson(500, message: 'Could not write clipboard');
+    }
+
+    return await request.respondJson(200, body: {'copied': true});
   }
 
   Future<void> _prepareUploadHandler({

@@ -12,7 +12,7 @@ StoredSecurityContext generateSecurityContext([AsymmetricKeyPair? keyPair]) {
   final privateKey = keyPair.privateKey as RSAPrivateKey;
   final publicKey = keyPair.publicKey as RSAPublicKey;
   final dn = {
-    'CN': 'LocalSend User',
+    'CN': 'iphone2win User',
     'O': '',
     'OU': '',
     'L': '',

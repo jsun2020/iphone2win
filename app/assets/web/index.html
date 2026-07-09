@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LocalSend</title>
+    <title>iphone2win</title>
     <style>
         body {
             font-family: sans-serif, system-ui;
@@ -15,6 +15,15 @@
         a {
             text-decoration: none;
             color: #FFFFFF;
+        }
+
+        button {
+            box-sizing: border-box;
+            min-height: 44px;
+            border: 0;
+            border-radius: 0.5em;
+            font: inherit;
+            font-weight: 700;
         }
 
         #file-list {
@@ -78,19 +87,59 @@
             box-sizing: border-box;
             width: 100%;
             text-align: left;
-            max-width: 400px;
+            max-width: 700px;
             padding: 0 1em;
             margin: 0 auto;
+        }
+
+        .text-item {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 700px;
+            padding: 0 1em 1em;
+            margin: 0 auto 1em;
+            text-align: left;
+        }
+
+        .text-preview {
+            box-sizing: border-box;
+            width: 100%;
+            min-height: 180px;
+            padding: 0.8em;
+            border: 1px solid #B0BEC5;
+            border-radius: 0.5em;
+            background: #FAFAFA;
+            color: #111111;
+            font: 16px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+            resize: vertical;
+            white-space: pre-wrap;
+        }
+
+        .copy-text-button,
+        .text-download-link {
+            display: block;
+            box-sizing: border-box;
+            width: 100%;
+            margin-top: 0.75em;
+            padding: 0.7em 1em;
+            text-align: center;
+            background-color: #00796B;
+            color: #FFFFFF;
+        }
+
+        .copy-text-button:hover,
+        .text-download-link:hover {
+            background-color: #009688;
         }
     </style>
     <script src="main.js" defer></script>
 </head>
 <body>
 <noscript>
-    LocalSend requires JavaScript, which is currently disabled. Please enable it and try again.
+    iphone2win requires JavaScript, which is currently disabled. Please enable it and try again.
 </noscript>
 
-<h1 style="padding: 0.5em">LocalSend</h1>
+<h1 style="padding: 0.5em">iphone2win</h1>
 <p id="status-text"></p>
 <div id="file-list"></div>
 <div id="single-file"></div>

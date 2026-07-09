@@ -33,7 +33,7 @@ final _logger = Logger('PersistenceService');
 
 String get _windowsFile {
   final appData = Platform.environment['APPDATA'];
-  return '$appData\\LocalSend\\settings.json';
+  return '$appData\\iphone2win\\settings.json';
 }
 
 String get _windowsLegacyFile {

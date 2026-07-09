@@ -42,7 +42,7 @@ class TranslationsGu extends Translations {
   @override
   String get locale => 'અંગ્રેજી';
   @override
-  String get appName => 'LocalSend';
+  String get appName => 'iphone2win';
   @override
   late final _TranslationsGeneralGu general = _TranslationsGeneralGu._(_root);
   @override
@@ -655,7 +655,7 @@ class _TranslationsTrayGu extends TranslationsTrayEn {
   @override
   String get open => _root.general.open;
   @override
-  String get close => 'LocalSend બંધ કરો';
+  String get close => 'iphone2win બંધ કરો';
   @override
   String get closeWindows => 'બહાર નિકડો';
 }
@@ -767,7 +767,7 @@ class _TranslationsNetworkInterfacesPageGu extends TranslationsNetworkInterfaces
   String get title => 'નેટવર્ક ઇન્ટરફેસ';
   @override
   String get info =>
-      'ડિફૌલ્ટ રૂપે, LocalSend બધા ઉપલબ્ધ નેટવર્ક ઇન્ટરફેસ વાપરશે. તમે અહી નજોયતા નેટવર્ક ને કાઢી શકો છો. બદલાવ જોયા માટે તમને સર્વર ને ફરી ચાલુ કરવું પડસે.';
+      'ડિફૌલ્ટ રૂપે, iphone2win બધા ઉપલબ્ધ નેટવર્ક ઇન્ટરફેસ વાપરશે. તમે અહી નજોયતા નેટવર્ક ને કાઢી શકો છો. બદલાવ જોયા માટે તમને સર્વર ને ફરી ચાલુ કરવું પડસે.';
 }
 
 // Path: receiveTab.infoBox
@@ -885,7 +885,7 @@ class _TranslationsSettingsTabGeneralGu extends TranslationsSettingsTabGeneralEn
   @override
   String get saveWindowPlacementWindows => 'બહાર નીકળ્યા પછી વિન્ડો ની જગ્યા સાચવો';
   @override
-  String get showInContextMenu => 'કૉટેક્સ્ટ મેન્યુ માં LocalSend દેખાડો';
+  String get showInContextMenu => 'કૉટેક્સ્ટ મેન્યુ માં iphone2win દેખાડો';
 }
 
 // Path: settingsTab.receive
@@ -1392,7 +1392,7 @@ class _TranslationsDialogsSendModeHelpGu extends TranslationsDialogsSendModeHelp
   @override
   String get multiple => 'ફાઈલોને ઘણા પ્રાપ્તકર્તાઓને મોકલવામાં આવે છે. પસંદગી સાફ કરવામાં આવશે નહીં.';
   @override
-  String get link => 'જે પ્રાપ્તકર્તાઓ પાસે LocalSend સ્થાપિત નથી તેઓ તેમના બ્રાઉઝરમાં લિંક ખોલીને પસંદ કરેલી ફાઈલો ડાઉનલોડ કરી શકે છે.';
+  String get link => 'જે પ્રાપ્તકર્તાઓ પાસે iphone2win સ્થાપિત નથી તેઓ તેમના બ્રાઉઝરમાં લિંક ખોલીને પસંદ કરેલી ફાઈલો ડાઉનલોડ કરી શકે છે.';
 }
 
 // Path: dialogs.zoom

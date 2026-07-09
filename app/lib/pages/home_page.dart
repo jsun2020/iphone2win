@@ -10,6 +10,7 @@ import 'package:localsend_app/pages/home_page_controller.dart';
 import 'package:localsend_app/pages/tabs/receive_tab.dart';
 import 'package:localsend_app/pages/tabs/send_tab.dart';
 import 'package:localsend_app/pages/tabs/settings_tab.dart';
+import 'package:localsend_app/pages/tabs/usb_tab.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/util/native/cross_file_converters.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
@@ -19,6 +20,7 @@ import 'package:refena_flutter/refena_flutter.dart';
 enum HomeTab {
   receive(Icons.wifi),
   send(Icons.send),
+  usb(Icons.usb),
   settings(Icons.settings);
 
   const HomeTab(this.icon);
@@ -31,6 +33,8 @@ enum HomeTab {
         return t.receiveTab.title;
       case HomeTab.send:
         return t.sendTab.title;
+      case HomeTab.usb:
+        return 'USB';
       case HomeTab.settings:
         return t.settingsTab.title;
     }
@@ -121,7 +125,7 @@ class _HomePageState extends State<HomePage> with Refena {
                                         SizedBox(height: 40)
                                       : SizedBox(height: 20),
                                   const Text(
-                                    'LocalSend',
+                                    'iphone2win',
                                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
@@ -159,6 +163,7 @@ class _HomePageState extends State<HomePage> with Refena {
                         children: const [
                           SafeArea(child: ReceiveTab()),
                           SafeArea(child: SendTab()),
+                          SafeArea(child: UsbTab()),
                           SettingsTab(),
                         ],
                       ),

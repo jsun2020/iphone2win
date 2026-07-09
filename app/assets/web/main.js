@@ -127,17 +127,94 @@ function handleFilesDisplay(files, sessionId) {
   var fileKeys = getKeys(files);
   for (var i = 0; i < fileKeys.length; i++) {
     var file = files[fileKeys[i]];
-    html += '<a class="file-item" href="' + BASE_URL + '/download?sessionId=' + encodeURIComponent(sessionId) + '&fileId=' + encodeURIComponent(fileKeys[i]) + '">' +
-        '<div class="file-index-cell">' + (i + 1) + '</div>' +
-        '<div class="file-name-cell">' + escapeHtml(file.fileName) + '</div>' +
-        '<div class="file-size-cell">' + formatBytes(file.size) + '</div>' +
-        '</a>';
+    var downloadUrl = buildDownloadUrl(sessionId, fileKeys[i]);
+    if (isTextFile(file)) {
+      html += buildTextItem(file, i, downloadUrl);
+    } else {
+      html += '<a class="file-item" href="' + downloadUrl + '">' +
+          '<div class="file-index-cell">' + (i + 1) + '</div>' +
+          '<div class="file-name-cell">' + escapeHtml(file.fileName) + '</div>' +
+          '<div class="file-size-cell">' + formatBytes(file.size) + '</div>' +
+          '</a>';
+    }
   }
 
   if (fileKeys.length === 1) {
     document.getElementById('single-file').innerHTML = html;
   } else {
     document.getElementById('file-list').innerHTML = html;
+  }
+
+  for (var j = 0; j < fileKeys.length; j++) {
+    var textFile = files[fileKeys[j]];
+    if (isTextFile(textFile) && !textFile.preview && textFile.size <= 256 * 1024) {
+      loadTextPreview(buildDownloadUrl(sessionId, fileKeys[j]), 'text-preview-' + j);
+    }
+  }
+}
+
+function buildDownloadUrl(sessionId, fileId) {
+  return BASE_URL + '/download?sessionId=' + encodeURIComponent(sessionId) + '&fileId=' + encodeURIComponent(fileId);
+}
+
+function isTextFile(file) {
+  var fileType = file && file.fileType ? String(file.fileType).toLowerCase() : '';
+  return fileType === 'text' || fileType.indexOf('text/') === 0;
+}
+
+function buildTextItem(file, index, downloadUrl) {
+  var textAreaId = 'text-preview-' + index;
+  return '<div class="text-item">' +
+      '<p><strong>' + escapeHtml(file.fileName) + '</strong> <span>' + formatBytes(file.size) + '</span></p>' +
+      '<textarea id="' + textAreaId + '" class="text-preview" readonly>' + escapeHtml(file.preview || '') + '</textarea>' +
+      '<button class="copy-text-button" type="button" onclick="copyTextFromTextarea(\'' + textAreaId + '\')">Copy text</button>' +
+      '<a class="text-download-link" href="' + downloadUrl + '">Download text file</a>' +
+      '</div>';
+}
+
+function loadTextPreview(url, textAreaId) {
+  makeRequest(url, 'GET', function (response) {
+    if (response.status !== 200) {
+      return;
+    }
+
+    var field = document.getElementById(textAreaId);
+    if (field && !field.value) {
+      field.value = response.responseText;
+    }
+  });
+}
+
+function copyTextFromTextarea(textAreaId) {
+  var field = document.getElementById(textAreaId);
+  if (!field || !field.value) {
+    document.getElementById('status-text').innerText = 'No text to copy.';
+    return;
+  }
+
+  var text = field.value;
+  var copied = function () {
+    document.getElementById('status-text').innerText = 'Text copied.';
+  };
+  var fallback = function () {
+    field.focus();
+    field.select();
+    if (field.setSelectionRange) {
+      field.setSelectionRange(0, field.value.length);
+    }
+    try {
+      if (document.execCommand && document.execCommand('copy')) {
+        copied();
+        return;
+      }
+    } catch (e) {}
+    document.getElementById('status-text').innerText = 'Text selected. Use Copy from the system menu.';
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(copied).catch(fallback);
+  } else {
+    fallback();
   }
 }
 

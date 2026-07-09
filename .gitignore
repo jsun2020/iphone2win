@@ -8,5 +8,8 @@
 
 /secrets
 
+# Generated portable release artifacts
+/dist/
+
 # FVM Version Cache
 .fvm/

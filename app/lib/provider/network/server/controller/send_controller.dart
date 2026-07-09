@@ -264,8 +264,8 @@ class SendController {
                   size: file.size,
                   fileType: file.fileType,
                   hash: null,
-                  preview: files.first.fileType == FileType.text && files.first.bytes != null
-                      ? utf8.decode(files.first.bytes!) // send simple message by embedding it into the preview
+                  preview: file.fileType == FileType.text && file.bytes != null
+                      ? utf8.decode(file.bytes!) // send simple message by embedding it into the preview
                       : null,
                   metadata: file.lastModified != null || file.lastAccessed != null
                       ? FileMetadata(

@@ -29,6 +29,22 @@ void main() {
       expect(js, contains('pin'));
     });
 
+    test('HTML exposes an explicit text paste form for clipboard transfer', () {
+      final html = _readAsset('assets/web/upload.html');
+
+      expect(html, contains('id="clipboardText"'));
+      expect(html, contains('id="pasteText"'));
+      expect(html, contains('id="sendText"'));
+    });
+
+    test('JavaScript sends pasted text to the local clipboard endpoint only', () {
+      final js = _readAsset('assets/web/upload.js');
+
+      expect(js, contains('/api/iphone2win/v1/clipboard-text'));
+      expect(js, contains('navigator.clipboard.readText'));
+      expect(js, contains('sendTextButton'));
+    });
+
     test('ReceiveController serves the local upload page assets', () {
       final source = _readAsset('lib/provider/network/server/controller/receive_controller.dart');
 
@@ -36,6 +52,14 @@ void main() {
       expect(source, contains('qrUploadScriptPath'));
       expect(source, contains('Assets.web.uploadHtml'));
       expect(source, contains('Assets.web.uploadJs'));
+    });
+
+    test('ReceiveController exposes a PIN-protected local clipboard text endpoint', () {
+      final source = _readAsset('lib/provider/network/server/controller/receive_controller.dart');
+
+      expect(source, contains('qrClipboardTextPath'));
+      expect(source, contains('Clipboard.setData'));
+      expect(source, contains('receivePin'));
     });
   });
 }
