@@ -47,6 +47,61 @@ void main() {
     ]);
   });
 
+  test('nonzero empty idevice_id output returns commandFailed', () async {
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 2,
+          stdoutText: '',
+          stderrText: '',
+          timedOut: false,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.commandFailed);
+    expect(status.udid, isNull);
+    expect(status.canTransfer, isFalse);
+    expect(status.message, contains('exit code 2'));
+    expect(status.exitCode, 2);
+    expect(runner.calls, [
+      const _RecordedCommandCall(_ideviceIdPath, ['-l']),
+    ]);
+  });
+
+  test('timed out empty idevice_id output returns commandFailed', () async {
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: -1,
+          stdoutText: '',
+          stderrText: '',
+          timedOut: true,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.commandFailed);
+    expect(status.udid, isNull);
+    expect(status.canTransfer, isFalse);
+    expect(status.message, contains('timed out'));
+    expect(status.exitCode, -1);
+    expect(status.timedOut, isTrue);
+    expect(runner.calls, [
+      const _RecordedCommandCall(_ideviceIdPath, ['-l']),
+    ]);
+  });
+
   test('single UDID and successful pair validation returns trusted', () async {
     const udid = '00008030-001C195E0A10802E';
     final runner = _FakeIosUsbCommandRunner()

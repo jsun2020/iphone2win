@@ -162,11 +162,7 @@ List<String> _parseUdids(String stdoutText) {
 }
 
 bool _isNoDeviceListResult(IosUsbCommandResult result) {
-  if (result.timedOut && !_outputIndicatesNoDevice(result)) {
-    return false;
-  }
-
-  return result.isSuccess || result.stderrText.trim().isEmpty || _outputIndicatesNoDevice(result);
+  return result.isSuccess || _outputIndicatesNoDevice(result);
 }
 
 bool _outputIndicatesNoDevice(IosUsbCommandResult result) {
