@@ -11,5 +11,8 @@
 # Generated portable release artifacts
 /dist/
 
+# Local implementation worktrees
+/.worktrees/
+
 # FVM Version Cache
 .fvm/
