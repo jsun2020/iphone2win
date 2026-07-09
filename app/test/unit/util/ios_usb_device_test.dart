@@ -102,6 +102,62 @@ void main() {
     ]);
   });
 
+  test('timed out idevice_id output with no-device text returns commandFailed', () async {
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: -1,
+          stdoutText: '',
+          stderrText: 'No device found before timeout.',
+          timedOut: true,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.commandFailed);
+    expect(status.udid, isNull);
+    expect(status.canTransfer, isFalse);
+    expect(status.message, contains('timed out'));
+    expect(status.stderrText, 'No device found before timeout.');
+    expect(status.timedOut, isTrue);
+    expect(runner.calls, [
+      const _RecordedCommandCall(_ideviceIdPath, ['-l']),
+    ]);
+  });
+
+  test('passes commandTimeout to runner', () async {
+    const commandTimeout = Duration(seconds: 7);
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: '',
+          stderrText: '',
+          timedOut: false,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+      commandTimeout: commandTimeout,
+    );
+
+    await detector.detect();
+
+    expect(runner.calls, [
+      const _RecordedCommandCall(
+        _ideviceIdPath,
+        ['-l'],
+        timeout: commandTimeout,
+      ),
+    ]);
+  });
+
   test('single UDID and successful pair validation returns trusted', () async {
     const udid = '00008030-001C195E0A10802E';
     final runner = _FakeIosUsbCommandRunner()
@@ -163,6 +219,42 @@ void main() {
     ]);
   });
 
+  test('pair validation command failure redacts selected UDID diagnostics', () async {
+    const udid = '00008030-001C195E0A10802E';
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: '$udid\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      )
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 3,
+          stdoutText: 'validation started for $udid',
+          stderrText: 'unexpected validation failure for $udid',
+          timedOut: false,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.commandFailed);
+    expect(status.udid, udid);
+    expect(status.message, isNot(contains(udid)));
+    expect(status.stdoutText, isNot(contains(udid)));
+    expect(status.stderrText, isNot(contains(udid)));
+    expect(status.message, contains('[redacted-udid]'));
+    expect(status.stdoutText, contains('[redacted-udid]'));
+    expect(status.stderrText, contains('[redacted-udid]'));
+  });
+
   test('pair validation trust error returns notTrusted', () async {
     const udid = '00008030-001C195E0A10802E';
     final runner = _FakeIosUsbCommandRunner()
@@ -199,6 +291,70 @@ void main() {
       const _RecordedCommandCall(_ideviceIdPath, ['-l']),
       const _RecordedCommandCall(_idevicePairPath, ['-u', udid, 'validate']),
     ]);
+  });
+
+  test('pair validation trust error in stdout returns notTrusted', () async {
+    const udid = '00008030-001C195E0A10802E';
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: '$udid\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      )
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 1,
+          stdoutText: 'Please accept Trust This Computer on the device.',
+          stderrText: '',
+          timedOut: false,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.notTrusted);
+    expect(status.udid, udid);
+    expect(status.message, contains('unlock iPhone'));
+    expect(status.stdoutText, contains('Trust This Computer'));
+  });
+
+  test('pair validation passcode output returns notTrusted', () async {
+    const udid = '00008030-001C195E0A10802E';
+    final runner = _FakeIosUsbCommandRunner()
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: '$udid\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      )
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 1,
+          stdoutText: '',
+          stderrText: 'ERROR: passcode is set, enter the passcode on the device.',
+          timedOut: false,
+        ),
+      );
+    final detector = IosUsbDeviceDetector(
+      commandRunner: runner,
+      tools: _resolvedTools(),
+    );
+
+    final status = await detector.detect();
+
+    expect(status.code, IosUsbStatusCode.notTrusted);
+    expect(status.udid, udid);
+    expect(status.message, contains('unlock iPhone'));
+    expect(status.stderrText, contains('passcode'));
   });
 
   test('pair validation timeout without trust signal returns commandFailed', () async {
@@ -279,7 +435,13 @@ class _FakeIosUsbCommandRunner implements IosUsbCommandRunner {
     String? stdinText,
     Duration timeout = const Duration(seconds: 20),
   }) async {
-    calls.add(_RecordedCommandCall(executable, List.unmodifiable(arguments)));
+    calls.add(
+      _RecordedCommandCall(
+        executable,
+        List.unmodifiable(arguments),
+        timeout: timeout,
+      ),
+    );
 
     if (_results.isEmpty) {
       throw StateError('No queued result for $executable $arguments');
@@ -290,10 +452,15 @@ class _FakeIosUsbCommandRunner implements IosUsbCommandRunner {
 }
 
 class _RecordedCommandCall {
-  const _RecordedCommandCall(this.executable, this.arguments);
+  const _RecordedCommandCall(
+    this.executable,
+    this.arguments, {
+    this.timeout = const Duration(seconds: 20),
+  });
 
   final String executable;
   final List<String> arguments;
+  final Duration timeout;
 
   @override
   bool operator ==(Object other) {
@@ -301,14 +468,18 @@ class _RecordedCommandCall {
       return true;
     }
 
-    return other is _RecordedCommandCall && other.executable == executable && _listEquals(other.arguments, arguments);
+    return other is _RecordedCommandCall && other.executable == executable && _listEquals(other.arguments, arguments) && other.timeout == timeout;
   }
 
   @override
-  int get hashCode => Object.hash(executable, Object.hashAll(arguments));
+  int get hashCode => Object.hash(
+    executable,
+    Object.hashAll(arguments),
+    timeout,
+  );
 
   @override
-  String toString() => '_RecordedCommandCall($executable, $arguments)';
+  String toString() => '_RecordedCommandCall($executable, $arguments, $timeout)';
 }
 
 bool _listEquals<T>(List<T> left, List<T> right) {

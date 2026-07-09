@@ -83,6 +83,7 @@ class IosUsbDeviceDetector {
       return _commandFailed(
         operation: 'Failed to list connected iPhones',
         result: listResult,
+        knownUdids: udids,
       );
     }
 
@@ -111,12 +112,14 @@ class IosUsbDeviceDetector {
     }
 
     if (_indicatesTrustRequired(validateResult)) {
+      final knownUdids = [udid];
+
       return IosUsbDeviceStatus(
         code: IosUsbStatusCode.notTrusted,
         udid: udid,
         message: 'Please unlock iPhone and tap Trust This Computer, then try again.',
-        stdoutText: validateResult.stdoutText,
-        stderrText: validateResult.stderrText,
+        stdoutText: _redactKnownUdids(validateResult.stdoutText, knownUdids),
+        stderrText: _redactKnownUdids(validateResult.stderrText, knownUdids),
         exitCode: validateResult.exitCode,
         timedOut: validateResult.timedOut,
       );
@@ -141,13 +144,19 @@ class IosUsbDeviceDetector {
     required String operation,
     required IosUsbCommandResult result,
     String? udid,
+    Iterable<String> knownUdids = const [],
   }) {
+    final udidsToRedact = {
+      if (udid != null) udid,
+      ...knownUdids,
+    };
+
     return IosUsbDeviceStatus(
       code: IosUsbStatusCode.commandFailed,
       udid: udid,
-      message: '$operation${result.timedOut ? ' (timed out)' : ''}: ${_commandDetails(result)}',
-      stdoutText: result.stdoutText,
-      stderrText: result.stderrText,
+      message: '$operation${result.timedOut ? ' (timed out)' : ''}: ${_commandDetails(result, udidsToRedact)}',
+      stdoutText: _redactKnownUdids(result.stdoutText, udidsToRedact),
+      stderrText: _redactKnownUdids(result.stderrText, udidsToRedact),
       exitCode: result.exitCode,
       timedOut: result.timedOut,
     );
@@ -162,6 +171,10 @@ List<String> _parseUdids(String stdoutText) {
 }
 
 bool _isNoDeviceListResult(IosUsbCommandResult result) {
+  if (result.timedOut) {
+    return false;
+  }
+
   return result.isSuccess || _outputIndicatesNoDevice(result);
 }
 
@@ -187,19 +200,39 @@ bool _indicatesTrustRequired(IosUsbCommandResult result) {
       output.contains('lockdownd_invalid_host_id') ||
       output.contains('device is not paired') ||
       output.contains('not paired with this host') ||
-      output.contains('please pair');
+      output.contains('please pair') ||
+      output.contains('passcode') ||
+      output.contains('device is locked') ||
+      output.contains('device locked') ||
+      output.contains('locked device') ||
+      output.contains('unlock the device') ||
+      output.contains('unlock device') ||
+      output.contains('unlock your device');
 }
 
-String _commandDetails(IosUsbCommandResult result) {
-  final stderr = result.stderrText.trim();
+String _commandDetails(
+  IosUsbCommandResult result,
+  Iterable<String> knownUdids,
+) {
+  final stderr = _redactKnownUdids(result.stderrText.trim(), knownUdids);
   if (stderr.isNotEmpty) {
     return stderr;
   }
 
-  final stdout = result.stdoutText.trim();
+  final stdout = _redactKnownUdids(result.stdoutText.trim(), knownUdids);
   if (stdout.isNotEmpty) {
     return stdout;
   }
 
   return 'exit code ${result.exitCode}';
+}
+
+String _redactKnownUdids(String text, Iterable<String> knownUdids) {
+  var redacted = text;
+
+  for (final udid in knownUdids.where((udid) => udid.isNotEmpty).toSet()) {
+    redacted = redacted.replaceAll(udid, '[redacted-udid]');
+  }
+
+  return redacted;
 }
