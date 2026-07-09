@@ -10,6 +10,7 @@
 
 # Generated portable release artifacts
 /dist/
+/tools/libimobiledevice/
 
 # Local implementation worktrees
 /.worktrees/
