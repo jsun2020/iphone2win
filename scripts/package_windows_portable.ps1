@@ -106,9 +106,9 @@ FILE1="run_iphone2win.cmd"
     if (Test-Path -LiteralPath $PortableExe) {
       Remove-Item -LiteralPath $PortableExe -Force
     }
-    & $IExpress /N /Q $SedPath
-    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $PortableExe)) {
-      throw "IExpress failed to create $PortableExe"
+    $IExpressProcess = Start-Process -FilePath $IExpress -ArgumentList @('/N', '/Q', $SedPath) -Wait -PassThru -WindowStyle Hidden
+    if ($IExpressProcess.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $PortableExe)) {
+      throw "IExpress failed with exit code $($IExpressProcess.ExitCode) to create $PortableExe"
     }
   } finally {
     if (Test-Path -LiteralPath $SedPath) {
