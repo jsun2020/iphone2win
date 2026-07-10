@@ -128,6 +128,64 @@ void main() {
     expect(runner.calls.last.stdinText, contains('get "USB-Outbox/.._evil.txt"'));
   });
 
+  test('pull ignores echoed quit commands and AFC prompt-only lines', () async {
+    runner
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: 'afc> ls "USB-Outbox"\nreport.txt\nafc> quit\nAFC> quit\nquit\nafc>\nphoto.jpg\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      )
+      ..queueHandler((call) async {
+        await _writeDownloadedFiles(call, {
+          'report.txt': 'report',
+          'photo.jpg': 'photo',
+        });
+        return _successResult;
+      });
+
+    final result = await service().pullOutbox(
+      udid: udid,
+      destination: tempDir,
+    );
+
+    expect(result.pulledFilePaths.map(p.basename), ['report.txt', 'photo.jpg']);
+    expect(runner.calls.last.stdinText, isNot(contains('USB-Outbox/quit')));
+  });
+
+  test('pull reserves distinct local paths for colliding names in one batch', () async {
+    runner
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: 'a<b>.txt\na?b?.txt\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      )
+      ..queueHandler((call) async {
+        await _writeDownloadedFiles(call, {
+          'a_b_.txt': 'first',
+          'a_b_ (2).txt': 'second',
+        });
+        return _successResult;
+      });
+
+    final result = await service().pullOutbox(
+      udid: udid,
+      destination: tempDir,
+    );
+
+    expect(result.pulledFilePaths.map(p.basename), [
+      'a_b_.txt',
+      'a_b_ (2).txt',
+    ]);
+    expect(await File(result.pulledFilePaths[0]).readAsString(), 'first');
+    expect(await File(result.pulledFilePaths[1]).readAsString(), 'second');
+  });
+
   test('push uploads local files to the app File Sharing inbox with safe remote names', () async {
     final report = await File(p.join(tempDir.path, 'report .txt')).writeAsString('report bytes');
     final notes = await File(p.join(tempDir.path, 'notes.txt')).writeAsString('note bytes');

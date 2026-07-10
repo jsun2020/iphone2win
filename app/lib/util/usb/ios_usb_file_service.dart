@@ -83,9 +83,14 @@ class IosUsbFileService {
     }
 
     final pulledFilePaths = <String>[];
+    final reservedLocalPaths = <String>{};
     final script = StringBuffer();
     for (final remoteName in remoteNames) {
-      final localFile = await getAvailableUsbFile(destination, remoteName);
+      final localFile = await _getAvailableUsbFileWithReservations(
+        destination,
+        remoteName,
+        reservedLocalPaths,
+      );
       final safeRemoteName = _safeRemoteFileName(remoteName);
       script.writeln(
         'get ${_quoteAfcArgument(_remotePath(iosUsbOutboxFolderName, safeRemoteName))} '
@@ -236,11 +241,41 @@ String? _normalizeAfcListLine(String rawLine) {
       line == '$iosUsbOutboxFolderName:' ||
       lowerLine == 'ls' ||
       lowerLine.startsWith('ls ') ||
+      lowerLine == 'quit' ||
+      lowerLine == 'exit' ||
       lowerLine.startsWith('listing ')) {
     return null;
   }
 
   return line;
+}
+
+Future<File> _getAvailableUsbFileWithReservations(
+  Directory directory,
+  String fileName,
+  Set<String> reservedPaths,
+) async {
+  final initialFile = await getAvailableUsbFile(directory, fileName);
+  final initialName = p.basename(initialFile.path);
+  final extension = p.extension(initialName);
+  final baseName = p.basenameWithoutExtension(initialName);
+
+  var candidate = initialFile;
+  var counter = 2;
+  while (reservedPaths.contains(_reservationKey(candidate.path)) || await candidate.exists()) {
+    candidate = File(
+      p.join(directory.path, '$baseName ($counter)$extension'),
+    );
+    counter++;
+  }
+
+  reservedPaths.add(_reservationKey(candidate.path));
+  return candidate;
+}
+
+String _reservationKey(String filePath) {
+  final canonicalPath = p.canonicalize(File(filePath).absolute.path);
+  return Platform.isWindows ? canonicalPath.toLowerCase() : canonicalPath;
 }
 
 IosUsbFileServiceException _commandFailure({
