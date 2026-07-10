@@ -73,6 +73,10 @@ class IosUsbFileService {
     required Directory destination,
   }) async {
     await destination.create(recursive: true);
+    await _ensureRemoteFolder(
+      udid: udid,
+      folderName: iosUsbOutboxFolderName,
+    );
 
     final remoteNames = await _listRemoteFiles(
       udid: udid,
@@ -137,7 +141,12 @@ class IosUsbFileService {
       return const IosUsbPushResult(pushedFiles: []);
     }
 
-    final script = StringBuffer()..writeln('mkdir ${_quoteAfcArgument(iosUsbInboxFolderName)}');
+    await _ensureRemoteFolder(
+      udid: udid,
+      folderName: iosUsbInboxFolderName,
+    );
+
+    final script = StringBuffer();
     for (final pushedFile in pushedFiles) {
       script.writeln(
         'put ${_quoteAfcArgument(pushedFile.localPath)} '
@@ -170,10 +179,23 @@ class IosUsbFileService {
     return _parseAfcListOutput(result.stdoutText);
   }
 
+  Future<void> _ensureRemoteFolder({
+    required String udid,
+    required String folderName,
+  }) async {
+    await _runAfc(
+      udid: udid,
+      stdinText: 'mkdir ${_quoteAfcArgument(folderName)}\nquit\n',
+      operation: 'Failed to prepare iPhone USB folder',
+      ignoreCommandErrors: true,
+    );
+  }
+
   Future<IosUsbCommandResult> _runAfc({
     required String udid,
     required String stdinText,
     required String operation,
+    bool ignoreCommandErrors = false,
   }) async {
     final afcClientPath = _afcClientPath();
     final result = await _commandRunner.run(
@@ -183,7 +205,7 @@ class IosUsbFileService {
       timeout: commandTimeout,
     );
 
-    if (!result.isSuccess) {
+    if (!result.isSuccess || (!ignoreCommandErrors && _containsAfcCommandError(result))) {
       throw _commandFailure(
         operation: operation,
         result: result,
@@ -203,6 +225,21 @@ class IosUsbFileService {
     }
     return path;
   }
+}
+
+bool _containsAfcCommandError(IosUsbCommandResult result) {
+  final output = '${result.stdoutText}\n${result.stderrText}';
+  for (final rawLine in const LineSplitter().convert(output)) {
+    var line = rawLine.trim();
+    final promptIndex = line.indexOf('>');
+    if (promptIndex >= 0 && line.substring(0, promptIndex).toLowerCase().contains('afc')) {
+      line = line.substring(promptIndex + 1).trim();
+    }
+    if (line.toLowerCase().startsWith('error:')) {
+      return true;
+    }
+  }
+  return false;
 }
 
 List<String> _parseAfcListOutput(String stdoutText) {

@@ -35,14 +35,9 @@ void main() {
   }
 
   test('pull lists the app File Sharing outbox with scoped afcclient command', () async {
-    runner.queueResult(
-      const IosUsbCommandResult(
-        exitCode: 0,
-        stdoutText: '',
-        stderrText: '',
-        timedOut: false,
-      ),
-    );
+    runner
+      ..queueResult(_successResult)
+      ..queueResult(_successResult);
 
     final result = await service().pullOutbox(
       udid: udid,
@@ -50,21 +45,23 @@ void main() {
     );
 
     expect(result.count, 0);
-    expect(runner.calls, hasLength(1));
-    expect(runner.calls.single.executable, _afcClientPath);
-    expect(runner.calls.single.arguments, [
+    expect(runner.calls, hasLength(2));
+    expect(runner.calls.first.stdinText, contains('mkdir "USB-Outbox"'));
+    expect(runner.calls.last.executable, _afcClientPath);
+    expect(runner.calls.last.arguments, [
       '--documents',
       iphone2winIosBundleId,
       '-u',
       udid,
     ]);
-    expect(runner.calls.single.stdinText, contains('ls "USB-Outbox"'));
-    expect(runner.calls.single.timeout, const Duration(seconds: 7));
+    expect(runner.calls.last.stdinText, contains('ls "USB-Outbox"'));
+    expect(runner.calls.last.timeout, const Duration(seconds: 7));
   });
 
   test('pull parses listed remote files into collision-safe local paths', () async {
     await File(p.join(tempDir.path, 'report.txt')).writeAsString('existing');
     runner
+      ..queueResult(_successResult)
       ..queueResult(
         const IosUsbCommandResult(
           exitCode: 0,
@@ -100,6 +97,7 @@ void main() {
 
   test('pull confines unsafe remote names to sanitized local destination paths', () async {
     runner
+      ..queueResult(_successResult)
       ..queueResult(
         const IosUsbCommandResult(
           exitCode: 0,
@@ -130,6 +128,7 @@ void main() {
 
   test('pull ignores echoed quit commands and AFC prompt-only lines', () async {
     runner
+      ..queueResult(_successResult)
       ..queueResult(
         const IosUsbCommandResult(
           exitCode: 0,
@@ -157,6 +156,7 @@ void main() {
 
   test('pull reserves distinct local paths for colliding names in one batch', () async {
     runner
+      ..queueResult(_successResult)
       ..queueResult(
         const IosUsbCommandResult(
           exitCode: 0,
@@ -189,7 +189,9 @@ void main() {
   test('push uploads local files to the app File Sharing inbox with safe remote names', () async {
     final report = await File(p.join(tempDir.path, 'report .txt')).writeAsString('report bytes');
     final notes = await File(p.join(tempDir.path, 'notes.txt')).writeAsString('note bytes');
-    runner.queueResult(_successResult);
+    runner
+      ..queueResult(_successResult)
+      ..queueResult(_successResult);
 
     final result = await service().pushFiles(
       udid: udid,
@@ -201,17 +203,18 @@ void main() {
       'report.txt',
       'notes.txt',
     ]);
-    expect(runner.calls, hasLength(1));
-    expect(runner.calls.single.executable, _afcClientPath);
-    expect(runner.calls.single.arguments, [
+    expect(runner.calls, hasLength(2));
+    expect(runner.calls.first.stdinText, contains('mkdir "USB-Inbox"'));
+    expect(runner.calls.last.executable, _afcClientPath);
+    expect(runner.calls.last.arguments, [
       '--documents',
       iphone2winIosBundleId,
       '-u',
       udid,
     ]);
-    expect(runner.calls.single.stdinText, contains('mkdir "USB-Inbox"'));
-    expect(runner.calls.single.stdinText, contains('put "${_afcQuoteText(report.path)}" "USB-Inbox/report.txt"'));
-    expect(runner.calls.single.stdinText, contains('put "${_afcQuoteText(notes.path)}" "USB-Inbox/notes.txt"'));
+    expect(runner.calls.last.stdinText, contains('put "${_afcQuoteText(report.path)}" "USB-Inbox/report.txt"'));
+    expect(runner.calls.last.stdinText, contains('put "${_afcQuoteText(notes.path)}" "USB-Inbox/notes.txt"'));
+    expect(runner.calls.last.stdinText, isNot(contains('mkdir')));
   });
 
   test('push fails clearly for non-file paths before running afcclient', () async {
@@ -234,14 +237,16 @@ void main() {
   });
 
   test('command failure throws service exception with redacted diagnostics', () async {
-    runner.queueResult(
-      const IosUsbCommandResult(
-        exitCode: 7,
-        stdoutText: 'stdout for $udid',
-        stderrText: 'failed for $udid',
-        timedOut: false,
-      ),
-    );
+    runner
+      ..queueResult(_successResult)
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 7,
+          stdoutText: 'stdout for $udid',
+          stderrText: 'failed for $udid',
+          timedOut: false,
+        ),
+      );
 
     try {
       await service().pullOutbox(
@@ -258,6 +263,33 @@ void main() {
       expect(error.exitCode, 7);
       expect(error.timedOut, isFalse);
     }
+  });
+
+  test('AFC command error with exit code zero is not reported as success', () async {
+    runner
+      ..queueResult(_successResult)
+      ..queueResult(
+        const IosUsbCommandResult(
+          exitCode: 0,
+          stdoutText: 'afc> Error: Failed to list USB-Outbox\nafc> quit\n',
+          stderrText: '',
+          timedOut: false,
+        ),
+      );
+
+    expect(
+      () => service().pullOutbox(
+        udid: udid,
+        destination: tempDir,
+      ),
+      throwsA(
+        isA<IosUsbFileServiceException>().having(
+          (error) => error.message,
+          'message',
+          contains('Failed to list iPhone USB outbox'),
+        ),
+      ),
+    );
   });
 
   test('missing afcclient path throws clear service exception', () async {
