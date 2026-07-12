@@ -1,200 +1,80 @@
-# Contributing to LocalSend
+# 参与 iphone2win 开发
 
-LocalSend is an open-source project, and we welcome contributions from anyone who is interested in helping improve the app. Whether you're a developer, a translator, or a documentation writer, there are many ways to get involved.
+iphone2win 聚焦 iPhone/iPad 与 Windows 之间的本地文件传输。提交的代码、测试和文档应服务于局域网、二维码、USB、隐私或 Windows/iOS 兼容性，不引入与本项目无关的平台功能、分发渠道或上游宣传内容。
 
-## Getting Started
+## 开发环境
 
-If you're interested in contributing code to LocalSend, you'll need to follow these steps:
+- Flutter 3.38.10（见 `.fvmrc`）和兼容的 Dart SDK；
+- Windows 开发需要 Visual Studio 的“使用 C++ 的桌面开发”工作负载；
+- iOS 开发和构建需要 macOS、Xcode 和有效的本地签名配置；
+- 自动 USB 联调需要 Apple Devices/iTunes 提供的 Apple Mobile Device 驱动，以及本地 `libimobiledevice` 命令行工具。
 
-## Run
+`tools/libimobiledevice/`、`dist/`、编译产物、Apple 专有驱动和本机配置不得提交到仓库。
 
-After you have installed [Flutter](https://flutter.dev), then you can start this app by typing the following commands:
+## 本地启动
 
-```shell
+```powershell
 cd app
 flutter pub get
 dart run build_runner build -d
-flutter run
+flutter run -d windows
 ```
 
-## Translation
+修改模型、映射或生成代码相关源文件后，应重新运行 `build_runner`，不要只手工修改生成文件。
 
-You can help in translating this app to other languages!
+## 项目约束
 
-1. Fork this repository
-2. Choose one
-   - Add missing translations in existing languages: Only update `_missing_translations_<locale>.json` in [assets/i18n](https://github.com/localsend/localsend/tree/main/app/assets/i18n)
-   - Fix existing translations: Update `strings_<locale>.i18n.json` in [assets/i18n](https://github.com/localsend/localsend/tree/main/app/assets/i18n)
-   - Add new languages: Create a new file, see also: [locale codes](https://saimana.com/list-of-country-locale-code/).
-3. Optional: Re-run this app
-   1. Run `cd app` to enter the app directory.
-   2. Make sure you have [run](#run) this app once.
-   3. Update translations via `flutter pub run slang`
-   4. Run the app via `flutter run`
-4. Open a pull request
+### 隐私
 
-**_Take note:_ Fields decorated with `@` are not meant to be translated, they are not used in the app in any way, being merely informative text about the file or to give context to the translator.**
+不得引入公网发现、信令、STUN、TURN、中继、云同步、账号、遥测、分析、崩溃上报、广告、应用内购买或捐赠 SDK。不得在启动、发现或传输过程中向第三方发送设备别名、型号、版本、令牌、指纹、公网 IP 或文件元数据。
 
-Thanks to all [translators](https://github.com/localsend/localsend/tree/main/app/lib/pages/about/translators.dart)!
+二维码网页必须随应用本地打包，只访问当前 Windows 应用的同源接口，不加载远程脚本、字体、图片或统计资源。
 
-## Contributing Guidelines
+### USB
 
-Before you submit a pull request to LocalSend, please ensure that you have followed these guidelines:
+- 自动 USB 仅访问 iphone2win 的 iOS File Sharing Documents 目录；
+- 不访问照片/DCIM、其他应用容器或系统文件；
+- 调用外部工具时必须使用可执行文件和参数列表，不拼接 shell 命令；
+- 日志和错误信息不得无必要地暴露完整设备标识；
+- 工具缺失时应保留局域网、二维码和手动 USB 的可用性。
 
-- Code should be well-documented and formatted according to the [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style).
-- All changes should be covered by tests.
-- Commits should be well-written and descriptive, with a clear summary of the changes made and any relevant context.
-- Pull requests should target the `main` branch and include a clear summary of the changes made.
+### 兼容性
 
-## Bug Reports and Feature Requests
+新增 USB 能力不得删除或破坏现有发送、接收、二维码上传、二维码下载和文本传输。涉及 iOS bundle id 的修改会影响应用身份、文件共享定位和已有数据，应作为独立迁移处理。
 
-If you encounter a bug in LocalSend or have a feature request, please submit an issue to the [issue tracker](https://github.com/localsend/localsend/issues). Please be sure to provide a clear description of the problem or feature request, along with any relevant context or steps to reproduce the issue.
+## 测试与检查
 
-## Security Issues
+提交前至少运行：
 
-If you discover a security issue in LocalSend, please do not submit an issue to the public issue tracker. Instead, please email us directly at [support@localsend.org](mailto:support@localsend.org) so that we can address the issue as quickly and effectively as possible.
-
-## Distribution
-
-Git based distribution:
-
-| Channel        | Repository          | Maintainer                                         |
-|----------------|---------------------|----------------------------------------------------|
-| [Winget][]     | [Winget Repo][]     | [@sitiom][], [@Tienisto], Github Actions           |
-| [Scoop][]      | [Scoop Repo][]      | [@sitiom][], [@Tienisto], Github Actions           |
-| [Chocolatey][] | [Chocolatey Repo][] | [@brogers5][]                                      |
-| [Homebrew][]   | [Homebrew Repo][]   | [@Tienisto][], Github Actions                      |
-| [Flathub][]    | [Flathub Repo][]    | [@proletarius101][], [@Tienisto][], Github Actions |
-| [AUR][]        | [AUR Repo][]        | [@Nixuge][]                                        |
-| [Nixpkgs][]    | [Nixpkgs Repo][]    | [@sikmir][], [@linsui][]                           |
-| [F-Droid][]    | [F-Droid Repo][]    | [@linsui][], [@Tienisto][], [F-Droid CI][]         |
-| [Snap][]       | [Snap Repo][]       | [@thatLeaflet][]                                   |
-
-[winget]: https://github.com/microsoft/winget-pkgs/tree/master/manifests/l/LocalSend/LocalSend
-[winget repo]: https://github.com/microsoft/winget-pkgs/tree/master/manifests/l/LocalSend/LocalSend
-[scoop]: https://scoop.sh/#/apps?s=0&d=1&o=true&q=localsend&id=fb88113be361ca32c0dcac423cb4afdeda0b0c66
-[scoop repo]: https://github.com/ScoopInstaller/Extras/blob/master/bucket/localsend.json
-[chocolatey]: https://community.chocolatey.org/packages/localsend
-[chocolatey repo]: https://github.com/brogers5/chocolatey-package-localsend/tree/main
-[homebrew]: https://formulae.brew.sh/cask/localsend
-[homebrew repo]: https://github.com/Homebrew/homebrew-cask/blob/master/Casks/l/localsend.rb
-[flathub]: https://flathub.org/apps/details/org.localsend.localsend_app
-[flathub repo]: https://github.com/flathub/org.localsend.localsend_app
-[aur]: https://aur.archlinux.org/packages/localsend-bin
-[aur repo]: https://aur.archlinux.org/localsend-bin.git
-[nixpkgs]: https://search.nixos.org/packages?show=localsend
-[nixpkgs repo]: https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/networking/localsend/default.nix
-[f-droid]: https://f-droid.org/packages/org.localsend.localsend_app
-[f-droid repo]: https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/org.localsend.localsend_app.yml
-[snap]: https://snapcraft.io/localsend
-[snap repo]: https://github.com/localsend/snap
-
-Manual distribution:
-
-| Channel        | Maintainer                               |
-|----------------|------------------------------------------|
-| [App Store][]  | [@Tienisto](https://github.com/Tienisto) |
-| [Play Store][] | [@Tienisto](https://github.com/Tienisto) |
-| [Amazon][]     | [@Tienisto](https://github.com/Tienisto) |
-
-[app store]: https://apps.apple.com/us/app/localsend/id1661733229
-[play store]: https://play.google.com/store/apps/details?id=org.localsend.localsend_app
-[amazon]: https://www.amazon.com/dp/B0BW6MP732
-
-Binary distribution:
-
-| Type        | Maintainer    | Credits                      |
-|-------------|---------------|------------------------------|
-| Windows ZIP | [@Tienisto][] |                              |
-| MSIX        | [@Tienisto][] |                              |
-| EXE         | [@Tienisto][] |                              |
-| APK         | [@Tienisto][] |                              |
-| TAR         | [@Tienisto][] |                              |
-| DEB         | [@Tienisto][] |                              |
-| AppImage    | [@Tienisto][] | [@TheGB0077][]               |
-| DMG         | [@Tienisto][] |                              |
-
-[@Tienisto]: https://github.com/Tienisto
-[@TheGB0077]: https://github.com/TheGB0077
-[@sitiom]: https://github.com/sitiom
-[@Nixuge]: https://github.com/Nixuge
-[@proletarius101]: https://github.com/proletarius101
-[@brogers5]: https://github.com/brogers5
-[@sikmir]: https://github.com/sikmir
-[@linsui]: https://github.com/linsui
-[@thatLeaflet]: https://github.com/thatLeaflet
-[F-Droid CI]: https://gitlab.com/fdroidci
-
-TODO:
-
-You can help in publishing LocalSend on more platforms. Please create an issue to notify us!
-
-- Traditional Linux distributions (Debian, Fedora, etc.)
-- (Your idea here)
-
-## Notes
-
-Useful notes.
-
-### Compile production APK
-
-You will need the signing keys to generate an APK.
-
-Either generate one or use the debug signing options:
-
-```groovy
-// File: android/app/build.gradle
-buildTypes {
-  release {
-    signingConfig signingConfigs.debug // using debug signing
-  }
-}
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\privacy_audit.ps1
+cd app
+flutter analyze
+flutter test
+flutter build windows --debug
 ```
 
-### Bump Flutter
+改动范围较小时可先运行对应的 `app/test/unit/` 测试，但提交前仍应完成全量测试。涉及 Rust 核心时还应运行：
 
-Suppose we want to update flutter to `3.7.8` (see https://github.com/localsend/localsend/commit/7b95a7a5600db2742a9e05b956d0415d871239d5):
-
-1. Update flutter from fvm: `fvm use 3.7.8`
-2. Update flutter from submodule:
-   1. `git submodule update --init`
-   2. `cd submodules/flutter`
-   3. `git fetch`
-   4. `git checkout 3.7.8`
-   5. `cd ../..`
-   6. `git add submodules/flutter`
-3. Update flutter constraints:
-   1. In CI: `.github/workflows/ci.yml`
-   2. In pubspec: `pubspec.yaml`
-
-### Release
-
-Make sure to set up the self-hosted runner to compile arm64 linux binaries.
-
-To set up the runner, follow the following instructions:
-
-Install Flutter
-
-```bash
-sudo apt install git
-git clone https://github.com/flutter/flutter.git $HOME/flutter
-nano $HOME/.bashrc
+```powershell
+cargo test --manifest-path .\app\rust\Cargo.toml
 ```
 
-Add the following to the end of the file:
+涉及 iOS 的变更需在 macOS/Xcode 环境补充构建或真机验证，并在变更说明中注明未能执行的检查。
 
-```bash
-export PATH="$PATH:$HOME/flutter/bin"
-```
+## 提交要求
 
-Restart the terminal.
+1. 一个变更只解决一个清晰问题，并同步更新相关测试和文档。
+2. 提交信息简洁说明类型和范围，例如 `feat(usb): ...`、`fix(qr): ...`、`docs: ...`。
+3. 合并请求说明应包含：问题背景、实现内容、隐私影响、验证命令和结果、需要的手工验证。
+4. UI 变更应附 Windows 或 iPhone 的截图；传输问题应提供复现步骤、两端系统版本、网络/USB 环境和已脱敏日志。
+5. 安全或隐私问题不要在公开讨论中附带未脱敏的设备标识、网络地址或文件内容；先向项目维护者私下报告。
 
-```bash
-flutter doctor
-```
+## 手工验收建议
 
-Next, follow the instructions to set up the GitHub runner.
-
-Start the "Release Draft" workflow from the "Actions" tab: https://github.com/localsend/localsend/actions/workflows/release.yml
-
-Finally, compile binaries not yet supported by the pipeline.
+- 同一局域网内完成 iPhone → Windows 和 Windows → iPhone 传输；
+- 使用二维码完成浏览器上传、文件下载和文本复制；
+- 在开启/关闭自动接收及 PIN 的情况下检查接收行为；
+- USB 工具缺失、无设备、未信任、已信任等状态均显示可执行的提示；
+- 使用 USB 分别推送和拉取文件，并验证同名文件不会被静默覆盖；
+- Windows 便携包在包含和不包含 USB 工具时都能启动。

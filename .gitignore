@@ -1,5 +1,9 @@
 .idea
 
+# Ignore ad-hoc PRD files outside the repository root, but keep this project's PRD versioned.
+prd.md
+!/prd.md
+
 # Linux AppImage
 /app/AppDir
 /app/appimage-build
