@@ -1,9 +1,9 @@
 name: localsend_app
-description: An open source cross-platform alternative to AirDrop
-homepage: https://localsend.org/
+description: Local file transfer between iPhone, iPad, and Windows
+homepage: https://github.com/jsun2020/iphone2win
 publish_to: "none"
 
-version: 1.17.0+58
+version: 0.1.0+1
 
 environment:
   flutter: ^3.25.0

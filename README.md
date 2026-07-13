@@ -4,6 +4,16 @@ iphone2win 是一个面向 iPhone/iPad 与 Windows 的本地文件传输工具�
 
 本项目基于 [LocalSend](https://github.com/localsend/localsend) 开发，保留其局域网发现和点对点传输能力，并针对 Apple 设备与 Windows 之间的使用场景增加了二维码和 USB 工作流。项目采用 Apache-2.0 许可证，详见 [LICENSE](LICENSE)。
 
+## 下载
+
+前往 [GitHub Releases](https://github.com/jsun2020/iphone2win/releases/latest) 下载最新 Windows x64 版本：
+
+- `iphone2win-<版本>-windows-x64-portable.exe`：单文件便携版，双击即可运行；
+- `iphone2win-<版本>-windows-x64.zip`：解压后运行 `iphone2win.exe`；
+- `SHA256SUMS.txt`：用于校验下载文件是否完整。
+
+发布包无需安装。当前文件未进行商业代码签名，Windows SmartScreen 首次运行时可能显示警告。GitHub 标准发布包不包含 Apple 专有驱动或可选的 `libimobiledevice` 工具；局域网、二维码和手动 USB 功能不受影响。
+
 ## 功能
 
 - 局域网双向传输：同一局域网内发现设备，直接发送文件或文本。
@@ -77,4 +87,4 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package_windows_portable.ps1
 
 产物生成在 `dist/`。如果存在 `tools/libimobiledevice/`，打包脚本会将其一并放入便携包。
 
-贡献前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，产品范围和验收要求见 [prd.md](prd.md)。
+贡献前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，产品范围和验收要求见 [prd.md](prd.md)，发布流程见 [PUBLISHING.md](PUBLISHING.md)。

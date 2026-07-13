@@ -2,8 +2,10 @@
 
 本文件只记录 iphone2win 相对于上游 LocalSend 的项目变更。
 
-## 未发布
+## 0.1.0（2026-07-13）
 
+- 首个 iphone2win GitHub Release，可直接下载 Windows x64 单文件 EXE 或 ZIP。
+- 新增标签触发的 Windows 自动构建、SHA-256 校验和 GitHub Release 发布流程。
 - 完善项目 README、贡献指南、更新日志和产品需求文档。
 
 ## 2026-07-10
