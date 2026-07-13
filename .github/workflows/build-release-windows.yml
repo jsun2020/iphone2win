@@ -16,7 +16,9 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # gal 2.3.0 does not link with the Visual Studio 18 toolset currently used
+    # by windows-latest. Pin the verified VS 2022 environment for releases.
+    runs-on: windows-2022
     timeout-minutes: 45
 
     steps:
